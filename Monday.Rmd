@@ -7,6 +7,11 @@ params:
   day: "Mon"
 ---
 
+```{r global_options}
+knitr::opts_chunk$set(fig.path='Figs/')
+```
+
+
 # Packages required to load and analyse the data
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=FALSE}
@@ -50,11 +55,11 @@ day_data$Year <- factor(day_data$Year, levels=c("2011","2012"))
 
 #categorizing the weathersit variable as factor
 day_data <- mutate(day_data, weather_situation = 
-                  ifelse(weathersit == 1, "Clear, Few clouds, Partly cloudy, Partly cloudy",
-                  ifelse(weathersit == 2, "Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist",
-                  ifelse(weathersit == 3, "Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds",
-                  ifelse(weathersit == 4, "Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog", "")))))
-day_data$weather_situation <- factor(day_data$weather_situation, levels=c("Clear, Few clouds, Partly cloudy, Partly cloudy","Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist", "Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds","Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog"))
+                  ifelse(weathersit == 1, "Clear Weather",
+                  ifelse(weathersit == 2, "Misty/Cloudy Weather",
+                  ifelse(weathersit == 3, "Light Snow/Rain/Thunderstorm Weather",
+                  ifelse(weathersit == 4, "Heavy Rain/Snow/Fog/Icy Weather", "")))))
+day_data$weather_situation <- factor(day_data$weather_situation, levels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather"))
 
 #reordering the day_data and renaming mth, cnt and hum
 day_data <- day_data %>% select(-c("instant","season","yr", "weathersit")) %>% rename(month = mnth,count = cnt,humidity = hum)
@@ -86,6 +91,114 @@ day_data_Test <- data_weekday[test, ]
 
 ## Data Summarizations and discussions
 
-The table for 
+The averages for selected variables for each year is shown below
 
+```{r}
+grouped_mean  <-  day_data_Train %>%
+  group_by(Year) %>%
+  summarise(
+    n=n(),
+    avg_registered_user = round(mean(registered), 0),
+    avg_casual_user = round(mean(casual), 0),
+    avg_windspeed = round(mean(windspeed*67), 2),
+    avg_humidity = round(mean(humidity*100), 2),
+  )
+  
+kable(grouped_mean, caption="Averages of selected variables for each year")
+```
+
+The standard deviations by year for each of the variables above are summarized below.
+```{r}
+grouped_sd  <-  day_data_Train %>%
+  group_by(Year) %>%
+  summarise(
+    n=n(),
+    avg_registered_user = round(sd(registered), 0),
+    avg_casual_user = round(sd(casual), 0),
+    avg_windspeed = round(sd(windspeed*67), 3),
+    avg_humidity = round(sd(humidity*100), 3),
+  )
+  
+kable(grouped_sd, caption="Standard deviation of selected variables for each year")
+```
+
+The table for weather condition vs. year for this particular day is shown below:
+```{r}
+year_season_table <- table(day_data_Train$Year, day_data_Train$weather_situation )
+kable(year_season_table, caption="Table of Year vs. Weather situation")
+```
+
+This is visualized below:
+
+
+```{r}
+ggplot(data=day_data_Train, aes(x=day_data_Train$Year))+
+  geom_bar(aes(fill=as.factor(day_data_Train$weather_situation)))+ 
+  labs(x="Year", title="Weather situation by year for this week day")+ 
+  scale_fill_discrete(name="Weather situation", labels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather")) 
+```
+
+This bar plot shows the weather pattern for this particular day in 2011 and 2012.
+
+The number of casual and registered users on this particular day from 2011-2012 are categorized below:
+```{r}
+#categorizing the number casual users as factor
+day_data_Train <- mutate(day_data_Train, casual_format = 
+                  ifelse(casual %in% 0:1000, "Low number of casual users",
+                  ifelse(casual %in% 1000:2000, "Medium number of casual users",
+                  ifelse(casual > 2000, "High number of casual users", ""))))
+day_data_Train$casual_format <- factor(day_data_Train$casual_format, levels=c("Low number of casual users","Medium number of casual users", "High number of casual users"))
+
+#categorizing the number registered users as factor
+day_data_Train <- mutate(day_data_Train, registered_format = 
+                  ifelse(registered %in% 0:2000, "Low number of registered users",
+                  ifelse(registered %in% 2000:4000, "Medium number of registered users",
+                  ifelse(registered > 4000, "High number of registered users", ""))))
+day_data_Train$registered_format <- factor(day_data_Train$registered_format, levels=c("Low number of registered users","Medium number of registered users", "High number of registered users"))
+```
+
+The number of casual users vs season for 2011-2012 are shown in the table and bar chart below:
+
+```{r}
+casual_users_table <- table(day_data_Train$casual_format, day_data_Train$Season )
+kable(casual_users_table, caption="Casual users vs Season for 2011-2012")
+
+ggplot(data=day_data_Train, aes(x=day_data_Train$Season))+
+  geom_bar(aes(fill=as.factor(day_data_Train$casual_format)))+ 
+  labs(x="Season", title="Casual users vs Season for this week day from 2011-2012")+ 
+  scale_fill_discrete(name="Casual Users", labels=c("Low number of casual users","Medium number of casual users", "High number of casual users")) + 
+  coord_flip()
+```
+
+The same information for  number of registered users is shown in the table and bar chart below:
+
+```{r}
+registered_users_table <- table(day_data_Train$registered_format, day_data_Train$Season )
+kable(registered_users_table, caption="Registered users vs Season for 2011-2012")
+
+ggplot(data=day_data_Train, aes(x=day_data_Train$Season))+
+  geom_bar(aes(fill=as.factor(day_data_Train$registered_format)))+ 
+  labs(x="Season", title="Registered users vs Season for this week day from 2011-2012")+ 
+  scale_fill_discrete(name="Registered Users", labels=c("Low number of registered users","Medium number of registered users", "High number of registered users")) + 
+  coord_flip()
+```
+
+We can inspect the trend of casual and registered users across seasons to see if there is a seasonal effect present.
+
+Next, it would be nice to see how total bike rentals vary by season and weather situation for this particular day.
+```{r}
+ggplot(data=day_data_Train, aes(x=Season, y= count))+
+  geom_boxplot(aes(fill=Season))+
+  labs(x="Season", y="Total number of rentals", fill="Season", title = "Boxplot of Total number of rentals by Season for this week day")
+```
+This plot will let us know if there is a seasonal effect on number of rentals for this particular week day.
+
+
+We can also see if for a given year, weather condition has an effect on the number of rentals for this week day
+
+```{r}
+ggplot(data=day_data_Train, aes(x=weather_situation, y= count))+
+  geom_boxplot(aes(fill=weather_situation))+
+  labs(x="Weather Situation", y="Total number of rentals", fill="Weather Situation", title = "Boxplot of Total number of rentals by Weather condition for this week day")+  theme(axis.text.x = element_text(size  = 10,angle = 45,hjust = 1,vjust = 1)) 
+```
 
