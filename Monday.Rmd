@@ -199,6 +199,7 @@ We can also see if for a given year, weather condition has an effect on the numb
 ```{r}
 ggplot(data=day_data_Train, aes(x=weather_situation, y= count))+
   geom_boxplot(aes(fill=weather_situation))+
-  labs(x="Weather Situation", y="Total number of rentals", fill="Weather Situation", title = "Boxplot of Total number of rentals by Weather condition for this week day")+  theme(axis.text.x = element_text(size  = 10,angle = 45,hjust = 1,vjust = 1)) 
+  labs(x="Weather Situation", y="Total number of rentals", fill="Weather Situation", title = "Boxplot of Total number of rentals by Weather situation for this week day")+
+  theme(axis.text.x = element_text(size  = 10,angle = 45,hjust = 1,vjust = 1)) 
 ```
 
