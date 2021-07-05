@@ -11,7 +11,7 @@ params:
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate")
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats")
 lapply(packages, library, character.only = TRUE)
 ```
 
@@ -24,26 +24,55 @@ lapply(packages, library, character.only = TRUE)
 
 
 
-
+## Data preparation
 Reading in the data using a relative path
+
 ```{r}
 day_data  <-  read_csv("day.csv")
 ```
+
+Converting the year, season, and weather situation variables:
+
+```{r}
+#categorizing the season variable as factor
+day_data <- mutate(day_data, Season = 
+                  ifelse(season == 1, "Winter",
+                  ifelse(season == 2, "Spring",
+                  ifelse(season == 3, "Summer",
+                  ifelse(season == 4, "Fall", "")))))
+day_data$Season <- factor(day_data$Season, levels=c("Winter","Spring", "Summer","Fall"))
+
+#categorizing the year variable as factor
+day_data <- mutate(day_data, Year = 
+                  ifelse(yr == 0, "2011",
+                  ifelse(yr == 1, "2012", "")))
+day_data$Year <- factor(day_data$Year, levels=c("2011","2012"))
+
+#categorizing the weathersit variable as factor
+day_data <- mutate(day_data, weather_situation = 
+                  ifelse(weathersit == 1, "Clear, Few clouds, Partly cloudy, Partly cloudy",
+                  ifelse(weathersit == 2, "Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist",
+                  ifelse(weathersit == 3, "Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds",
+                  ifelse(weathersit == 4, "Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog", "")))))
+day_data$weather_situation <- factor(day_data$weather_situation, levels=c("Clear, Few clouds, Partly cloudy, Partly cloudy","Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist", "Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds","Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog"))
+
+#reordering the day_data and renaming mth, cnt and hum
+day_data <- day_data %>% select(-c("instant","season","yr", "weathersit")) %>% rename(month = mnth,count = cnt,humidity = hum)
+```
+
 Converting the weekday variable to a factor containing the 7 days of the week:
 
 ```{r}
 day_as_fac_data <- day_data %>%
-    mutate(weekday_alt = wday(weekday +1,label=TRUE)) 
+    mutate(week_day = wday(weekday +1,label=TRUE)) 
 day_as_char_data <- day_as_fac_data %>% mutate_if(is.factor, as.character)
 ```
 
 Setting up the dataset for later automation. The code will be automated to analysis data for the day from the day: "weekday" seen in the YAML header:
 ```{r}
 data_weekday <- day_as_char_data %>% 
-  filter(day_as_char_data$weekday_alt == params$day)
+  filter(day_as_char_data$week_day == params$day)
 ```
-
-
 
 ## Train/Test split
 Doing a 70:30 split for training/testing:
@@ -54,4 +83,9 @@ test  <- setdiff(1:nrow(data_weekday), train)
 day_data_Train <- data_weekday[train, ]
 day_data_Test <- data_weekday[test, ]
 ```
+
+## Data Summarizations and discussions
+
+The table for 
+
 
