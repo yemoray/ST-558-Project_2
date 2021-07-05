@@ -1,0 +1,57 @@
+---
+title: "Monday Analysis"
+authors: "Adeyemi Adepetun/Jiashu Zhao"
+date: "7/4/2021"
+output: rmarkdown::github_document
+params:
+  day: "Mon"
+---
+
+# Packages required to load and analyse the data
+The following packages are needed for reading and analyzing the data:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate")
+lapply(packages, library, character.only = TRUE)
+```
+
+# `r toupper(params$day)` Report
+
+## Introduction
+
+
+
+
+
+
+
+Reading in the data using a relative path
+```{r}
+day_data  <-  read_csv("day.csv")
+```
+Converting the weekday variable to a factor containing the 7 days of the week:
+
+```{r}
+day_as_fac_data <- day_data %>%
+    mutate(weekday_alt = wday(weekday +1,label=TRUE)) 
+day_as_char_data <- day_as_fac_data %>% mutate_if(is.factor, as.character)
+```
+
+Setting up the dataset for later automation. The code will be automated to analysis data for the day from the day: "weekday" seen in the YAML header:
+```{r}
+data_weekday <- day_as_char_data %>% 
+  filter(day_as_char_data$weekday_alt == params$day)
+```
+
+
+
+## Train/Test split
+Doing a 70:30 split for training/testing:
+```{r}
+set.seed(365)
+train  <-  sample(1:nrow(data_weekday), size = 0.7*nrow(data_weekday))
+test  <- setdiff(1:nrow(data_weekday), train)
+day_data_Train <- data_weekday[train, ]
+day_data_Test <- data_weekday[test, ]
+```
+
