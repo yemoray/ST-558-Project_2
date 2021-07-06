@@ -237,6 +237,7 @@ ggplot(data=day_data_Train, aes(x=Season, y= count))+
   geom_boxplot(aes(fill=Season))+
   labs(x="Season", y="Total number of rentals", fill="Season", title = "Boxplot of Total number of rentals by Season for this week day")
 ```
+
 This plot will let us know if there is a seasonal effect on number of rentals for this particular week day.
 
 ### Temperature and Feeling Temperature
@@ -244,12 +245,6 @@ This plot will let us know if there is a seasonal effect on number of rentals fo
 We are curious about how difference is between temperature and feeling temperature, so we decided to make a comparison line plot.
 
 ```{r}
-<<<<<<< HEAD
-ggplot(data=day_data_Train, aes(x=weather_situation, y= count))+
-  geom_boxplot(aes(fill=weather_situation))+
-  labs(x="Weather Situation", y="Total number of rentals", fill="Weather Situation", title = "Boxplot of Total number of rentals by Weather situation for this week day")+
-  theme(axis.text.x = element_text(size  = 10,angle = 45,hjust = 1,vjust = 1)) 
-=======
 tem_plot <- day_data_Train %>%
   select(dteday, temp, atemp, Year, count) %>%
   gather('temp','value',2:3)
@@ -257,9 +252,9 @@ tem_plot <- day_data_Train %>%
 ggplot(tem_plot) + geom_line(aes(x=dteday,y=value,color=temp)) + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '', labels=c('temp','feeling temp')) + labs(x='Date', y='Temp', title = 'Temperature vs. feeling temperature')
 ```
 
-Basically, When the ture temperature is high, the body temperature will be lower; when the actual temperature is very low, the opposite is true.
+Basically, When the temperature is high, the body temperature will be lower; when the actual temperature is very low, the opposite is true.
 
-There's no difference between these 2 variables, so we decided to drop `feeling temperature` due to the consideration of collinearity. Besides, the variance of ture `temperature` is a little bit larger than `feeling temperature`, so we expect `temperature` to be more sensitive when fitting the model.
+There's no difference between these 2 variables, so we decided to drop `feeling temperature` due to the consideration of collinearity. Besides, the variance of `temperature` is a little bit larger than `feeling temperature`, so we expect `temperature` to be more sensitive when fitting the model.
 
 ### Humidity
 
@@ -271,7 +266,6 @@ hum_plot <- day_data_Train %>%
   gather('regist', 'count', 2:3)
 
 ggplot(data = hum_plot, aes(x=humidity, y=count, group=regist)) + geom_point(aes(color=regist)) + geom_smooth(aes(group=regist), color='black') + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '') + labs(title = 'Relationship between Humidity and User Count')
->>>>>>> 7f826299d4ab5b83a41c5d4a05aaa3a51b2b4b6c
 ```
 
 We can inspect the relationship of users with humidity using this plot roughly. The points are nearly evenly distributed, which means humidity can seldom affect the users if we control all other variables.
@@ -297,4 +291,16 @@ ggplot(data = wind_plot, aes(x=windspeed, y=count, group=regist)) + geom_point(a
 We can inspect the relationship of users with windspeed using this plot roughly.
 
 
+## Modeling
 
+### Linear Regression Model
+Linear regression modeling is one of the supervised learning methods where the output is known, and the goal is to establish a function that best approximates the relationship between desired outputs and the provided sample data. Specifically, linear regression accomplishes this by learning a model that best fits the linear relationship between the predictor and response variables.The model is fit by minimizing the sum of squared residuals (difference between the observed and predicted responses). Linear regression models fall into two categories: Simple Linear Regression and Multiple Linear Regression.
+
+Simple Linear Regression Model is one where there is only one independent variable (or predictor) and the goal is to learn the linear relationship between it and the response variable. Multiple Linear Regression (MLR) has more than one predictor, and the although relationship between predictors and response remains linear in terms of the model parameters, the MLR model could contain interaction, quadratic and polynomial terms.
+
+Underlying assumptions for the linear regression model are 
+* Linearity: The model is linear in model parameters (betas) (Can be checked using histogram or Q-Q plots) 
+* Normality: The predictor and response variables are multivariate normal  
+* Multicollinearity: There is little to no multicollinearity among the predictor variables. (can be checked using Variance Inflation Factor)
+* Homoscedasticity: Residuals are randomly distributed across the regression line (Can be checked using the Residual vs. Fitted value scatter plot. The plot must have to discernable pattern)  
+* Autocorrelation: Residuals must be independent of each other (Can be checked using Durbin-Watson's test).
