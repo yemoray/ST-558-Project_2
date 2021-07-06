@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.path='Figs/')
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps")
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass")
 lapply(packages, library, character.only = TRUE)
 ```
 
@@ -309,4 +309,47 @@ Underlying assumptions for the linear regression model are
 * Autocorrelation: Residuals must be independent of each other (Can be checked using Durbin-Watson's test).
 
 
+#### Subsetting the predictors that should best predict the total count of users
 
+To select the candidate models, I first subset the dataset to include only variables of interest for MLR. I also 
+```{r}
+day_data_Train_sub <- day_data_Train %>% select(-c(dteday,weekday,casual_format,registered_format,registered,casual,week_day, atemp)) #atemp dropped because it is collinear with temp.
+```
+
+Variable selection can be done using the `leaps` function:
+```{r}
+leaps <-  regsubsets(count ~ ., data = day_data_Train_sub)
+plot(leaps, scale="Cp")
+plot(leaps, scale="adjr2")
+```
+_The variables that minimize both Mallow's Cp and BIC will be the key variables._
+
+Limiting the number to the top 5 variables 
+```{r}
+coef(leaps, 5)
+```
+This shows the 5 key variables to be selected as predictors.
+
+Selecting the best model from a number candidate models creates using the selected key variables can be done using a 5 or 10 fold cross-validation. The best model will be the one having the lowest __RMSE__ and highest __Rsquared__ values.Another option is to perform backward elimination.This is done below.
+
+The following model contains all potential predictor variables. The code below carries out backward elimination to select a more parsimonious model
+```{r}
+Lin_reg_model <- lm(count ~ ., data = day_data_Train_sub)
+drop1(Lin_reg_model,test = "F")
+```
+ It appears that only `temp`,`Season`,`Year` and `weather_situation` are truly significant, based on the p-values (For Monday's data)
+ 
+ The linear model selected for later models comparison is:
+```{r}
+Lin_reg_model1 <- lm(count ~ factor(Season) + factor(Year) + factor(weather_situation) + temp + humidity + windspeed, data = day_data_Train_sub)
+anova(Lin_reg_model1)
+VIF(Lin_reg_model1)
+```
+ Multicollinearity does not appear to be an issue here.
+
+Checking other linear regression model assumptions
+```{r}
+par(mfrow=c(2,2))
+plot(Lin_reg_model1)
+```
+There are 2-3 outliers, but overall, the linear regression model assumptions are not violated.
