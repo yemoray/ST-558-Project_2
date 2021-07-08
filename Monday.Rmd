@@ -131,7 +131,7 @@ day_data_Test <- data_weekday[test, ]
 
 ## Data Summarizations and discussions
 
-### Overall Count (Jiashu, please add your summary tables)
+### Overall Count
 
 The averages for selected variables for each year is shown below
 
@@ -260,9 +260,25 @@ tem_plot <- day_data_Train %>%
 ggplot(tem_plot) + geom_line(aes(x=dteday,y=value,color=temp)) + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '', labels=c('temp','feeling temp')) + labs(x='Date', y='Temp', title = 'Temperature vs. feeling temperature')
 ```
 
-Basically, When the temperature is high, the body temperature will be lower; when the actual temperature is very low, the opposite is true.
+There's no significant difference between these 2 variables from the first look, so we decided to explore them deeply. First we want to output the numeric summary of `temperature` and `feeling temperature`.
 
-There's no difference between these 2 variables, so we decided to drop `feeling temperature` due to the consideration of collinearity. Besides, the variance of `temperature` is a little bit larger than `feeling temperature`, so we expect `temperature` to be more sensitive when fitting the model.
+```{r}
+temp_out <- day_data_Train %>% 
+  dplyr::select(temp,atemp)
+apply(temp_out,2, summary) %>%
+  kable(caption = 'Temperature vs Feeling Temperature', digits = 2, col.names = c('Temperature','Feeling Temperature'))
+```
+
+From the numeric summary, we noticed that the variance of `temperature` is a little bit wider than `feeling temperature`. It looks like these 2 variables do distributed pretty close, but in order to get statistical support, we still need a 2 sample t-test.
+
+```{r}
+T_test <- t.test(day_data_Train$temp, day_data_Train$atemp, alternative = 'two.sided')
+T_test
+```
+
+The p-value is about `r T_test$p.value`, which is pretty large, so we don't have enough evidence to reject the null hypothesis.
+
+We decided to drop one of them due to the consideration of collinearity. Since the variance of `temperature` is a little bit larger than `feeling temperature`, we may expect `temperature` to be more sensitive when fitting the model, so we decided to drop `feeling temperature` in some of our models.
 
 ### Humidity
 
@@ -277,6 +293,21 @@ ggplot(data = hum_plot, aes(x=humidity, y=count, group=regist)) + geom_point(aes
 ```
 
 We can inspect the relationship of users with humidity using this plot roughly. The points are nearly evenly distributed, which means humidity can seldom affect the users if we control all other variables.
+
+We added a categorical variable for original data set with 2 levels, one level is for those whose daily total count over than 5000; and another one is for smaller than 5000. We wish to see the numeric summary of humidity among these 2 groups.
+
+```{r}
+temp_out <- day_data_Train %>% 
+  dplyr::select(humidity, count_cat)
+
+index <- temp_out$count_cat=='Low'
+
+output <- data.frame(cbind(summary(temp_out$humidity[index]),summary(temp_out$humidity[-index])))
+
+output %>%
+  kable(caption = 'Numeric Summary for Humidity vs Count', digits = 2, col.names = c('Less than 5000','Greater than 5000'))
+```
+
 
 ### Wind Speed
 
@@ -350,6 +381,25 @@ Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_
 
 #### Second linear regression Model  (Jiashu, please add your linear model here)
 
+Then we decided to use the best subset method to select the variables.
+
+```{r}
+log_full <- glm(count ~ ., data = day_data_Train_sub_lm)
+log_step <- log_full %>% stepAIC(trace = F)
+
+coef(log_step)
+```
+
+Above shows the coefficients of the logistc regression selected by best subset method with `r length(coef(log_step))-1` variables.
+
+```{r}
+#Predict the response variable using the test data to evaluate model performance
+Lin_reg_2_predict <- predict(log_step, newdata = day_data_Test_sub_lm)
+
+#Get the missclassification rate 
+Lin_reg_2_predict_tbl <- table(Lin_reg_2_predict, day_data_Test_sub_lm$count)
+Lin_reg_2_misclass <- 1-(sum(diag(Lin_reg_2_predict_tbl))/sum(Lin_reg_2_predict_tbl))
+```
 
 ### Ensemble Tree Model
 #### First Ensemble Tree Model: Random Forest Model
