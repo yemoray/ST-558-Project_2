@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.path='Figs/')
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass")
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass","MASS")
 lapply(packages, library, character.only = TRUE)
 ```
 
@@ -99,19 +99,24 @@ day_as_char_data <- mutate(day_as_char_data, weather_situation =
                   ifelse(weathersit == 3, "Light Snow/Rain/Thunderstorm Weather",
                   ifelse(weathersit == 4, "Heavy Rain/Snow/Fog/Icy Weather", "")))))
 day_as_char_data$weather_situation <- factor(day_as_char_data$weather_situation, levels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather"))
-
-
 day_as_char_data$holiday <- as.factor(day_as_char_data$holiday)
 day_as_char_data$workingday <- as.factor(day_as_char_data$workingday)
 
 #reordering the day_data and renaming mth, cnt and hum
-day_as_char_data <- day_as_char_data %>% select(-c("instant","season","yr", "weathersit")) %>% rename(month = mnth,count = cnt,humidity = hum)
+day_as_char_data <- day_as_char_data %>% dplyr::select(-c("instant")) %>% rename(month = mnth,count = cnt,humidity = hum)
 ```
+
+```{r}
+day_as_char_data$count_cat  <-  ifelse(day_as_char_data$count >= 5000, "High", "Low")
+```
+
+
 
 Setting up the dataset for later automation. The code will be automated to analysis data for the day from the day: "weekday" seen in the YAML header:
 ```{r}
 data_weekday <- day_as_char_data %>% 
   filter(day_as_char_data$week_day == params$day)
+ data_weekday$count_cat <- as.factor(data_weekday$count_cat)
 ```
 
 ## Train/Test split
@@ -126,7 +131,7 @@ day_data_Test <- data_weekday[test, ]
 
 ## Data Summarizations and discussions
 
-### Overall Count
+### Overall Count (Jiashu, please add your summary tables)
 
 The averages for selected variables for each year is shown below
 
@@ -249,7 +254,7 @@ We are curious about how difference is between temperature and feeling temperatu
 
 ```{r}
 tem_plot <- day_data_Train %>%
-  select(dteday, temp, atemp, Year, count) %>%
+  dplyr::select(dteday, temp, atemp, Year, count) %>%
   gather('temp','value',2:3)
 
 ggplot(tem_plot) + geom_line(aes(x=dteday,y=value,color=temp)) + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '', labels=c('temp','feeling temp')) + labs(x='Date', y='Temp', title = 'Temperature vs. feeling temperature')
@@ -265,7 +270,7 @@ We would like to explore the general relationship between humidity and users cou
 
 ```{r}
 hum_plot <- day_data_Train %>%
-  select(humidity, casual, registered, Year) %>%
+  dplyr::select(humidity, casual, registered, Year) %>%
   gather('regist', 'count', 2:3)
 
 ggplot(data = hum_plot, aes(x=humidity, y=count, group=regist)) + geom_point(aes(color=regist)) + geom_smooth(aes(group=regist), color='black') + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '') + labs(title = 'Relationship between Humidity and User Count')
@@ -285,7 +290,7 @@ Same as humidity, we are curious about the relationship between windspeed and us
 
 ```{r}
 wind_plot <- day_data_Train %>%
-  select(windspeed, casual, registered, Year) %>%
+  dplyr::select(windspeed, casual, registered, Year) %>%
   gather('regist', 'count', 2:3)
 
 ggplot(data = wind_plot, aes(x=windspeed, y=count, group=regist)) + geom_point(aes(color=regist)) + geom_smooth(aes(group=regist), color='black') + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '') + labs(title = 'Relationship between Windspeed and User Count')
@@ -301,55 +306,82 @@ Linear regression modeling is one of the supervised learning methods where the o
 
 Simple Linear Regression Model is one where there is only one independent variable (or predictor) and the goal is to learn the linear relationship between it and the response variable. Multiple Linear Regression (MLR) has more than one predictor, and the although relationship between predictors and response remains linear in terms of the model parameters, the MLR model could contain interaction, quadratic and polynomial terms.
 
-Underlying assumptions for the linear regression model are 
-* Linearity: The model is linear in model parameters (betas) (Can be checked using histogram or Q-Q plots) 
+Underlying assumptions for the linear regression model are  
+* Linearity: The model is linear in model parameters (betas) (Can be checked using histogram or Q-Q plots)  
 * Normality: The predictor and response variables are multivariate normal  
-* Multicollinearity: There is little to no multicollinearity among the predictor variables. (can be checked using Variance Inflation Factor)
+* Multicollinearity: There is little to no multicollinearity among the predictor variables. (can be checked using Variance Inflation Factor)  
 * Homoscedasticity: Residuals are randomly distributed across the regression line (Can be checked using the Residual vs. Fitted value scatter plot. The plot must have to discernable pattern)  
-* Autocorrelation: Residuals must be independent of each other (Can be checked using Durbin-Watson's test).
+* Autocorrelation: Residuals must be independent of each other (Can be checked using Durbin-Watson's test).  
 
 
-#### Subsetting the predictors that should best predict the total count of users
+#### First linear regression Model
+##### Subsetting the predictors that should best predict the total count of users
 
-To select the candidate models, I first subset the dataset to include only variables of interest for MLR. I also 
+To select the candidate models, I first subset the dataset to include only variables of interest for MLR.
 ```{r}
-day_data_Train_sub <- day_data_Train %>% select(-c(dteday,weekday,casual_format,registered_format,registered,casual,week_day, atemp)) #atemp dropped because it is collinear with temp.
+day_data_Train_sub <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count))        #count_cat is used as the response for ensemble methods to minimize errors
+day_data_Test_sub <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count))   #The test data is subsetted as well
+
+day_data_Train_sub_lm <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count_cat))       #count is used as the response for linear regression
+day_data_Test_sub_lm <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count_cat))   #The test data is subsetted as well
 ```
 
-Variable selection can be done using the `leaps` function:
+For the linear regression model, `count` is the response, not `count_cat`
 ```{r}
-leaps <-  regsubsets(count ~ ., data = day_data_Train_sub)
-plot(leaps, scale="Cp")
-plot(leaps, scale="adjr2")
+Lin_reg_train_1 <- lm(count ~ ., data = day_data_Train_sub_lm) %>%
+  stepAIC(direction = "both", trace=FALSE, steps=100)                     #The best linear regression model is selected using AIC as the criteria
 ```
-_The variables that minimize both Mallow's Cp and BIC will be the key variables._
 
-Limiting the number to the top 5 variables 
+The code checks if the linear regression model satisfies the requirements:
 ```{r}
-coef(leaps, 5)
+#
+par(mfrow = c(2, 2))
+plot(Lin_reg_train_1)
 ```
-This shows the 5 key variables to be selected as predictors.
 
-Selecting the best model from a number candidate models creates using the selected key variables can be done using a 5 or 10 fold cross-validation. The best model will be the one having the lowest __RMSE__ and highest __Rsquared__ values.Another option is to perform backward elimination.This is done below.
+```{r}
+#Predict the response variable using the test data to evaluate model performance
+Lin_reg_1_predict <- predict(Lin_reg_train_1, newdata = day_data_Test_sub_lm)
 
-The following model contains all potential predictor variables. The code below carries out backward elimination to select a more parsimonious model
-```{r}
-Lin_reg_model <- lm(count ~ ., data = day_data_Train_sub)
-drop1(Lin_reg_model,test = "F")
+#Get the missclassification rate 
+Lin_reg_1_predict_tbl <- table(Lin_reg_1_predict, day_data_Test_sub_lm$count)
+Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_tbl))
 ```
- It appears that only `temp`,`Season`,`Year` and `weather_situation` are truly significant, based on the p-values (For Monday's data)
- 
- The linear model selected for later models comparison is:
-```{r}
-Lin_reg_model1 <- lm(count ~ factor(Season) + factor(Year) + factor(weather_situation) + temp + humidity + windspeed, data = day_data_Train_sub)
-anova(Lin_reg_model1)
-VIF(Lin_reg_model1)
-```
- Multicollinearity does not appear to be an issue here.
 
-Checking other linear regression model assumptions
+#### Second linear regression Model  (Jiashu, please add your linear model here)
+
+
+### Ensemble Tree Model
+#### First Ensemble Tree Model: Random Forest Model
+
+I'll be using a Random Forest as my ensemble method. It works by creating a number of decision trees from bootstrap samples using the training data set, with no interaction between the trees, and aggregates the result from these trees before outputting the most optimal result. _mtry_ is used as the tuning parameter, this is the number of variables randomly sampled at each split.
+The number of variables to use in the model is selected by 10-fold repeated cross validation from the `caret` package using accuracy as the metric. 
+
 ```{r}
-par(mfrow=c(2,2))
-plot(Lin_reg_model1)
+
+trctrl <- trainControl(method = "repeatedcv", number=10, repeats=3)
+rf_grid <- expand.grid(mtry = 1:11)
+rf_train <- train(count_cat ~., 
+                 data= day_data_Train_sub, 
+                 method='rf', 
+                 trControl=trctrl,
+                 tuneGrid = rf_grid,
+                 preProcess=c("center", "scale"))
+
+plot(rf_train)
+
+#The mtry value that gives the highest accuracy is:
+rf_train$bestTune
+
+
+#Predict the response variable using the test data to evaluate model performance
+rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
+
+
+#Get the missclassification rate 
+rf_predict_tbl <- table(rf_predict, day_data_Test_sub$count_cat)
+rf_misclass <- 1-(sum(diag(rf_predict_tbl))/sum(rf_predict_tbl))
 ```
-There are 2-3 outliers, but overall, the linear regression model assumptions are not violated.
+
+#### Second Ensemble Tree Model: Boosted Tree Model (Jiashu, please put your boosted tree model here)
+
