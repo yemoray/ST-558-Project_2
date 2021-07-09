@@ -310,14 +310,14 @@ Underlying assumptions for the linear regression model are
 * Linearity: The model is linear in model parameters (betas) (Can be checked using histogram or Q-Q plots)  
 * Normality: The predictor and response variables are multivariate normal  
 * Multicollinearity: There is little to no multicollinearity among the predictor variables. (can be checked using Variance Inflation Factor)  
-* Homoscedasticity: Residuals are randomly distributed across the regression line (Can be checked using the Residual vs. Fitted value scatter plot. The plot must have to discernable pattern)  
+* Homoscedasticity: Residuals are randomly distributed across the regression line (Can be checked using the Residual vs. Fitted value scatter plot. The plot must not have a discernable pattern)  
 * Autocorrelation: Residuals must be independent of each other (Can be checked using Durbin-Watson's test).  
 
 
 #### First linear regression Model
 ##### Subsetting the predictors that should best predict the total count of users
 
-To select the candidate models, I first subset the dataset to include only variables of interest for MLR.
+To select the candidate models, I first subset the dataset to include only variables of interest for the linear regression and ensemble models
 ```{r}
 day_data_Train_sub <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count))        #count_cat is used as the response for ensemble methods to minimize errors
 day_data_Test_sub <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count))   #The test data is subsetted as well
