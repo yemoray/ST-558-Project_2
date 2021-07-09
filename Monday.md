@@ -16,11 +16,19 @@ Monday Analysis
         -   [Seasons](#seasons)
         -   [Temperature and Feeling
             Temperature](#temperature-and-feeling-temperature)
+<<<<<<< HEAD
         -   [Humidity](#humidity)
         -   [Wind Speed](#wind-speed)
     -   [Modeling](#modeling)
         -   [Linear Regression Model](#linear-regression-model)
         -   [Ensemble Tree Model](#ensemble-tree-model)
+=======
+          - [Humidity](#humidity)
+          - [Wind Speed](#wind-speed)
+      - [Modeling](#modeling)
+          - [Linear Regression Model](#linear-regression-model)
+          - [Ensemble Tree Model](#ensemble-tree-model)
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ``` r
 knitr::opts_chunk$set(fig.path='Figs/')
@@ -115,6 +123,7 @@ day_as_char_data <- mutate(day_as_char_data, weather_situation =
                   ifelse(weathersit == 3, "Light Snow/Rain/Thunderstorm Weather",
                   ifelse(weathersit == 4, "Heavy Rain/Snow/Fog/Icy Weather", "")))))
 day_as_char_data$weather_situation <- factor(day_as_char_data$weather_situation, levels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather"))
+<<<<<<< HEAD
 
 
 day_as_char_data$holiday <- as.factor(day_as_char_data$holiday)
@@ -122,6 +131,17 @@ day_as_char_data$workingday <- as.factor(day_as_char_data$workingday)
 
 #reordering the day_data and renaming mth, cnt and hum
 day_as_char_data <- day_as_char_data %>% select(-c("instant","season")) %>% rename(month = mnth,count = cnt,humidity = hum)
+=======
+day_as_char_data$holiday <- as.factor(day_as_char_data$holiday)
+day_as_char_data$workingday <- as.factor(day_as_char_data$workingday)
+
+#reordering the day_data and renaming mth, cnt and hum
+day_as_char_data <- day_as_char_data %>% dplyr::select(-c("instant")) %>% rename(month = mnth,count = cnt,humidity = hum)
+```
+
+``` r
+day_as_char_data$count_cat  <-  ifelse(day_as_char_data$count >= 5000, "High", "Low")
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 ```
 
 Setting up the dataset for later automation. The code will be automated
@@ -131,6 +151,7 @@ header:
 ``` r
 data_weekday <- day_as_char_data %>% 
   filter(day_as_char_data$week_day == params$day)
+ data_weekday$count_cat <- as.factor(data_weekday$count_cat)
 ```
 
 ## Train/Test split
@@ -207,7 +228,11 @@ kable(year_season_table, caption="Table of Year vs. Weather situation")
 ```
 
 |      | Clear Weather | Misty/Cloudy Weather | Light Snow/Rain/Thunderstorm Weather | Heavy Rain/Snow/Fog/Icy Weather |
+<<<<<<< HEAD
 |:-----|--------------:|---------------------:|-------------------------------------:|--------------------------------:|
+=======
+| ---- | ------------: | -------------------: | -----------------------------------: | ------------------------------: |
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 | 2011 |            24 |                   10 |                                    1 |                               0 |
 | 2012 |            21 |                   16 |                                    1 |                               0 |
 
@@ -222,7 +247,7 @@ ggplot(data=day_data_Train, aes(x=day_data_Train$Year))+
   scale_fill_discrete(name="Weather situation", labels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather")) 
 ```
 
-![](Figs/unnamed-chunk-9-1.png)<!-- -->
+![](Figs/unnamed-chunk-10-1.png)<!-- -->
 
 This bar plot shows the weather pattern for this particular day in 2011
 and 2012.
@@ -236,7 +261,7 @@ ggplot(data=day_data_Train, aes(x=weather_situation, y= count))+
   labs(x="Weather Situation", y="Total number of rentals", fill="Weather Situation", title = "Boxplot of Total number of rentals by Weather condition for this week day")+  theme(axis.text.x = element_text(size  = 10,angle = 45,hjust = 1,vjust = 1)) 
 ```
 
-![](Figs/unnamed-chunk-10-1.png)<!-- -->
+![](Figs/unnamed-chunk-11-1.png)<!-- -->
 
 ### Seasons
 
@@ -268,7 +293,11 @@ kable(casual_users_table, caption="Casual users vs Season for 2011-2012")
 ```
 
 |                               | Winter | Spring | Summer | Fall |
+<<<<<<< HEAD
 |:------------------------------|-------:|-------:|-------:|-----:|
+=======
+| ----------------------------- | -----: | -----: | -----: | ---: |
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 | Low number of casual users    |     19 |     15 |      8 |   18 |
 | Medium number of casual users |      0 |      5 |      6 |    1 |
 | High number of casual users   |      0 |      1 |      0 |    0 |
@@ -283,7 +312,7 @@ ggplot(data=day_data_Train, aes(x=day_data_Train$Season))+
   coord_flip()
 ```
 
-![](Figs/unnamed-chunk-12-1.png)<!-- -->
+![](Figs/unnamed-chunk-13-1.png)<!-- -->
 
 The same information for number of registered users is shown in the
 table and bar chart below:
@@ -294,7 +323,11 @@ kable(registered_users_table, caption="Registered users vs Season for 2011-2012"
 ```
 
 |                                   | Winter | Spring | Summer | Fall |
+<<<<<<< HEAD
 |:----------------------------------|-------:|-------:|-------:|-----:|
+=======
+| --------------------------------- | -----: | -----: | -----: | ---: |
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 | Low number of registered users    |     11 |      1 |      0 |    1 |
 | Medium number of registered users |      7 |     13 |      5 |    9 |
 | High number of registered users   |      1 |      7 |      9 |    9 |
@@ -309,7 +342,7 @@ ggplot(data=day_data_Train, aes(x=day_data_Train$Season))+
   coord_flip()
 ```
 
-![](Figs/unnamed-chunk-13-1.png)<!-- -->
+![](Figs/unnamed-chunk-14-1.png)<!-- -->
 
 We can inspect the trend of casual and registered users across seasons
 to see if there is a seasonal effect present.
@@ -323,7 +356,11 @@ ggplot(data=day_data_Train, aes(x=Season, y= count))+
   labs(x="Season", y="Total number of rentals", fill="Season", title = "Boxplot of Total number of rentals by Season for this week day")
 ```
 
+<<<<<<< HEAD
 ![](Figs/unnamed-chunk-14-1.png)<!-- -->
+=======
+![](Figs/unnamed-chunk-15-1.png)<!-- -->
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 This plot will let us know if there is a seasonal effect on number of
 rentals for this particular week day.
@@ -335,14 +372,35 @@ temperature, so we decided to make a comparison line plot.
 
 ``` r
 tem_plot <- day_data_Train %>%
-  select(dteday, temp, atemp, Year, count) %>%
+  dplyr::select(dteday, temp, atemp, Year, count) %>%
   gather('temp','value',2:3)
 
 ggplot(tem_plot) + geom_line(aes(x=dteday,y=value,color=temp)) + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '', labels=c('temp','feeling temp')) + labs(x='Date', y='Temp', title = 'Temperature vs. feeling temperature')
 ```
 
-![](Figs/unnamed-chunk-15-1.png)<!-- -->
+![](Figs/unnamed-chunk-16-1.png)<!-- -->
 
+There’s no significant difference between these 2 variables from the
+first look, so we decided to explore them deeply. First we want to
+output the numeric summary of `temperature` and `feeling temperature`.
+
+``` r
+temp_out <- day_data_Train %>% 
+  dplyr::select(temp,atemp)
+apply(temp_out,2, summary) %>%
+  kable(caption = 'Temperature vs Feeling Temperature', digits = 2, col.names = c('Temperature','Feeling Temperature'))
+```
+
+|         | Temperature | Feeling Temperature |
+| ------- | ----------: | ------------------: |
+| Min.    |        0.10 |                0.12 |
+| 1st Qu. |        0.30 |                0.28 |
+| Median  |        0.45 |                0.46 |
+| Mean    |        0.46 |                0.45 |
+| 3rd Qu. |        0.64 |                0.60 |
+| Max.    |        0.78 |                0.72 |
+
+<<<<<<< HEAD
 Basically, When the temperature is high, the body temperature will be
 lower; when the actual temperature is very low, the opposite is true.
 
@@ -351,6 +409,41 @@ There’s no difference between these 2 variables, so we decided to drop
 the variance of `temperature` is a little bit larger than
 `feeling temperature`, so we expect `temperature` to be more sensitive
 when fitting the model.
+=======
+Temperature vs Feeling Temperature
+
+From the numeric summary, we noticed that the variance of `temperature`
+is a little bit wider than `feeling temperature`. It looks like these 2
+variables do distributed pretty close, but in order to get statistical
+support, we still need a 2 sample
+t-test.
+
+``` r
+T_test <- t.test(day_data_Train$temp, day_data_Train$atemp, alternative = 'two.sided')
+T_test
+```
+
+    ## 
+    ##  Welch Two Sample t-test
+    ## 
+    ## data:  day_data_Train$temp and day_data_Train$atemp
+    ## t = 0.57364, df = 142.1, p-value = 0.5671
+    ## alternative hypothesis: true difference in means is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.04149768  0.07542758
+    ## sample estimates:
+    ## mean of x mean of y 
+    ##  0.464701  0.447736
+
+The p-value is about 0.5671206, which is pretty large, so we don’t have
+enough evidence to reject the null hypothesis.
+
+We decided to drop one of them due to the consideration of collinearity.
+Since the variance of `temperature` is a little bit larger than `feeling
+temperature`, we may expect `temperature` to be more sensitive when
+fitting the model, so we decided to drop `feeling temperature` in some
+of our models.
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ### Humidity
 
@@ -359,17 +452,49 @@ users count.
 
 ``` r
 hum_plot <- day_data_Train %>%
-  select(humidity, casual, registered, Year) %>%
+  dplyr::select(humidity, casual, registered, Year) %>%
   gather('regist', 'count', 2:3)
 
 ggplot(data = hum_plot, aes(x=humidity, y=count, group=regist)) + geom_point(aes(color=regist)) + geom_smooth(aes(group=regist), color='black') + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '') + labs(title = 'Relationship between Humidity and User Count')
 ```
 
-![](Figs/unnamed-chunk-16-1.png)<!-- -->
+![](Figs/unnamed-chunk-19-1.png)<!-- -->
 
 We can inspect the relationship of users with humidity using this plot
 roughly. The points are nearly evenly distributed, which means humidity
 can seldom affect the users if we control all other variables.
+<<<<<<< HEAD
+=======
+
+We added a categorical variable for original data set with 2 levels, one
+level is for those whose daily total count over than 5000; and another
+one is for smaller than 5000. We wish to see the numeric summary of
+humidity among these 2 groups.
+
+``` r
+temp_out <- day_data_Train %>% 
+  dplyr::select(humidity, count_cat)
+
+index <- temp_out$count_cat=='Low'
+
+output <- data.frame(cbind(summary(temp_out$humidity[index]),summary(temp_out$humidity[-index])))
+
+output %>%
+  kable(caption = 'Numeric Summary for Humidity vs Count', digits = 2, col.names = c('Less than 5000','Greater than 5000'))
+```
+
+|         | Less than 5000 | Greater than 5000 |
+| ------- | -------------: | ----------------: |
+| Min.    |           0.30 |              0.30 |
+| 1st Qu. |           0.52 |              0.53 |
+| Median  |           0.65 |              0.66 |
+| Mean    |           0.64 |              0.64 |
+| 3rd Qu. |           0.76 |              0.75 |
+| Max.    |           0.91 |              0.91 |
+
+Numeric Summary for Humidity vs
+Count
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ### Wind Speed
 
@@ -377,7 +502,7 @@ can seldom affect the users if we control all other variables.
 ggplot(data = day_data_Train, aes(x=windspeed, y=..density..)) + geom_histogram(bins = 20) + geom_density(size=2.5,color='red',adjust=1/3) + facet_wrap(~Year, scales = 'free') + theme_bw()
 ```
 
-![](Figs/unnamed-chunk-17-1.png)<!-- -->
+![](Figs/unnamed-chunk-21-1.png)<!-- -->
 
 This plot shows the distribution of windspeed. Although the number of
 samples is small, it still shows a certain degree of normality.
@@ -387,13 +512,13 @@ windspeed and user count after controlled all other variables.
 
 ``` r
 wind_plot <- day_data_Train %>%
-  select(windspeed, casual, registered, Year) %>%
+  dplyr::select(windspeed, casual, registered, Year) %>%
   gather('regist', 'count', 2:3)
 
 ggplot(data = wind_plot, aes(x=windspeed, y=count, group=regist)) + geom_point(aes(color=regist)) + geom_smooth(aes(group=regist), color='black') + facet_wrap(~Year, scales = 'free') + theme_bw() + scale_colour_discrete(name = '') + labs(title = 'Relationship between Windspeed and User Count')
 ```
 
-![](Figs/unnamed-chunk-18-1.png)<!-- -->
+![](Figs/unnamed-chunk-22-1.png)<!-- -->
 
 We can inspect the relationship of users with windspeed using this plot
 roughly.
@@ -431,13 +556,19 @@ predictor variables. (can be checked using Variance Inflation Factor)
 regression line (Can be checked using the Residual vs. Fitted value
 scatter plot. The plot must have to discernable pattern)  
 \* Autocorrelation: Residuals must be independent of each other (Can be
+<<<<<<< HEAD
 checked using Durbin-Watson’s test).
+=======
+checked using Durbin-Watson’s
+test).
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 #### First linear regression Model
 
 ##### Subsetting the predictors that should best predict the total count of users
 
 To select the candidate models, I first subset the dataset to include
+<<<<<<< HEAD
 only variables of interest for MLR.
 
 ``` r
@@ -457,6 +588,44 @@ Lin_reg_1_predict <- predict(Lin_reg_train_1, newdata = day_data_Test_sub)
 
 #Get the missclassification rate 
 Lin_reg_1_predict_tbl <- table(Lin_reg_1_predict, day_data_Test_sub$count)
+=======
+only variables of interest for
+MLR.
+
+``` r
+day_data_Train_sub <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count))        #count_cat is used as the response for ensemble methods to minimize errors
+day_data_Test_sub <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count))   #The test data is subsetted as well
+
+day_data_Train_sub_lm <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count_cat))       #count is used as the response for linear regression
+day_data_Test_sub_lm <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count_cat))   #The test data is subsetted as well
+```
+
+For the linear regression model, `count` is the response, not
+`count_cat`
+
+``` r
+Lin_reg_train_1 <- lm(count ~ ., data = day_data_Train_sub_lm) %>%
+  stepAIC(direction = "both", trace=FALSE, steps=100)                     #The best linear regression model is selected using AIC as the criteria
+```
+
+The code checks if the linear regression model satisfies the
+requirements:
+
+``` r
+#
+par(mfrow = c(2, 2))
+plot(Lin_reg_train_1)
+```
+
+![](Figs/unnamed-chunk-25-1.png)<!-- -->
+
+``` r
+#Predict the response variable using the test data to evaluate model performance
+Lin_reg_1_predict <- predict(Lin_reg_train_1, newdata = day_data_Test_sub_lm)
+
+#Get the missclassification rate 
+Lin_reg_1_predict_tbl <- table(Lin_reg_1_predict, day_data_Test_sub_lm$count)
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_tbl))
 ```
 
@@ -466,12 +635,27 @@ Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_
 
 #### First Ensemble Tree Model: Random Forest Model
 
+<<<<<<< HEAD
 I’ll be using a Random Forest Model
+=======
+I’ll be using a Random Forest as my ensemble method. It works by
+creating a number of decision trees from bootstrap samples using the
+training data set, with no interaction between the trees, and aggregates
+the result from these trees before outputting the most optimal result.
+*mtry* is used as the tuning parameter, this is the number of variables
+randomly sampled at each split. The number of variables to use in the
+model is selected by 10-fold repeated cross validation from the `caret`
+package using accuracy as the metric.
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ``` r
 trctrl <- trainControl(method = "repeatedcv", number=10, repeats=3)
 rf_grid <- expand.grid(mtry = 1:11)
+<<<<<<< HEAD
 rf_train <- train(count ~., 
+=======
+rf_train <- train(count_cat ~., 
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
                  data= day_data_Train_sub, 
                  method='rf', 
                  trControl=trctrl,
@@ -481,7 +665,11 @@ rf_train <- train(count ~.,
 plot(rf_train)
 ```
 
+<<<<<<< HEAD
 ![](Figs/unnamed-chunk-22-1.png)<!-- -->
+=======
+![](Figs/unnamed-chunk-27-1.png)<!-- -->
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ``` r
 #The mtry value that gives the highest accuracy is:
@@ -489,7 +677,11 @@ rf_train$bestTune
 ```
 
     ##   mtry
+<<<<<<< HEAD
     ## 5    5
+=======
+    ## 3    3
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
 
 ``` r
 #Predict the response variable using the test data to evaluate model performance
@@ -497,6 +689,14 @@ rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
 
 
 #Get the missclassification rate 
+<<<<<<< HEAD
 rf_predict_tbl <- table(rf_predict, day_data_Test_sub$count)
 rf_misclass <- 1-(sum(diag(rf_predict_tbl))/sum(rf_predict_tbl))
 ```
+=======
+rf_predict_tbl <- table(rf_predict, day_data_Test_sub$count_cat)
+rf_misclass <- 1-(sum(diag(rf_predict_tbl))/sum(rf_predict_tbl))
+```
+
+#### Second Ensemble Tree Model: Boosted Tree Model (Jiashu, please put your boosted tree model here)
+>>>>>>> 0589bf10cde3dd177235372f7d729cd764a8f7b0
