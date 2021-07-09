@@ -1,6 +1,7 @@
 ST 558 Project 2
 ================
-Adeyemi Adepetun/Jiashu Zhao
+Adeyemi Adepetun/Jiashu Zhao  
+
 7/4/2021
 
 ```{r setup, include=FALSE}
