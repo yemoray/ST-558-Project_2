@@ -1,6 +1,6 @@
-# ST-558-Project_2
+ST 558 Project 2
 ================
-authors: Adeyemi Adepetun/Jiashu Zhao
+Adeyemi Adepetun/Jiashu Zhao
 7/4/2021
 
 ```{r setup, include=FALSE}
