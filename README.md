@@ -5,7 +5,7 @@ Adeyemi Adepetun/Jiashu Zhao
 7/4/2021
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(dplyr)
 library(knitr)
 ```
