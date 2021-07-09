@@ -4,11 +4,6 @@ Adeyemi Adepetun/Jiashu Zhao
 
 7/4/2021
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(dplyr)
-library(knitr)
-```
 
 ## Purpose of this repository
 The goal here is to read in the [bike sharing data set](https://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset) , perform some elementary data analysis, create and compare predictive models and automate Markdown reports for different days using the day.csv data.
@@ -30,7 +25,7 @@ reports
 
 
 ## Render function needed to generate the reports
-```{r, eval=F}
+```{r, eval=T}
 library(rmarkdown)
 apply(reports, MARGIN = 1, FUN=function(x){
   render(input = "Weekday_Analysis.Rmd", output_file = x[[2]], params=x[[3]])
