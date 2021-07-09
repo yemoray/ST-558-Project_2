@@ -375,16 +375,19 @@ plot(Lin_reg_train_1)
 Lin_reg_1_predict <- predict(Lin_reg_train_1, newdata = day_data_Test_sub_lm)
 
 #Get the missclassification rate 
-Lin_reg_1_predict_tbl <- table(Lin_reg_1_predict, day_data_Test_sub_lm$count)
-Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_tbl))
+Lin_reg_1_predict_tbl <- data.frame(Lin_reg_1_predict, day_data_Test_sub_lm$count)
+Lin_reg_1_misclass <- mean((Lin_reg_1_predict-day_data_Test_sub_lm$count)^2)
+Lin_reg_1_misclass
 ```
 
 #### Second linear regression Model  (Jiashu, please add your linear model here)
 
-Then we decided to use the best subset method to select the variables.
+Then we decided to use the best subset method to select the variables for logistic regression. Notice that we create a new variable called `count_cat` which is a categorical one. For those total count greater than 5000, `count_cat=High`, and for those total count less than 5000, `count_cat=Low`.
+
+As discussed previously about the `temperature` vs `feeling temperature`, we decided to drop `feeling temperature` first.
 
 ```{r}
-log_full <- glm(count ~ ., data = day_data_Train_sub_lm)
+log_full <- glm(count_cat ~ ., data = day_data_Train_sub %>% dplyr::select(-atemp), family = binomial)
 log_step <- log_full %>% stepAIC(trace = F)
 
 coef(log_step)
@@ -394,10 +397,12 @@ Above shows the coefficients of the logistc regression selected by best subset m
 
 ```{r}
 #Predict the response variable using the test data to evaluate model performance
-Lin_reg_2_predict <- predict(log_step, newdata = day_data_Test_sub_lm)
+Lin_reg_2_pro <- predict(log_step, newdata = day_data_Test_sub, type = 'response')
+
+Lin_reg_2_predict <- ifelse(Lin_reg_2_pro>0.5, 'Low', 'High')
 
 #Get the missclassification rate 
-Lin_reg_2_predict_tbl <- table(Lin_reg_2_predict, day_data_Test_sub_lm$count)
+Lin_reg_2_predict_tbl <- table(Lin_reg_2_predict, day_data_Test_sub$count_cat)
 Lin_reg_2_misclass <- 1-(sum(diag(Lin_reg_2_predict_tbl))/sum(Lin_reg_2_predict_tbl))
 ```
 
