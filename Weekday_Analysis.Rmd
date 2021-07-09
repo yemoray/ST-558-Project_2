@@ -105,11 +105,6 @@ day_as_char_data$weather_situation <- factor(day_as_char_data$weather_situation,
 day_as_char_data <- day_as_char_data %>% dplyr::select(-c("instant")) %>% rename(month = mnth,count = cnt,humidity = hum)
 ```
 
-```{r}
-day_as_char_data$count_cat  <-  ifelse(day_as_char_data$count >= 5000, "High", "Low")
-```
-
-
 
 Setting up the dataset for later automation. The code will be automated to analysis data for the day from the day: "weekday" seen in the YAML header:
 ```{r}
@@ -349,9 +344,9 @@ Underlying assumptions for the linear regression model are
 
 To select the candidate models, I first subset the dataset to include only variables of interest for MLR.
 ```{r}
-day_data_Train_sub <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,count_cat,atemp,workingday))
+day_data_Train_sub <- day_data_Train %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format,atemp,workingday))
 
-day_data_Test_sub <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,count_cat,atemp,workingday))   #The test data is subsetted as well
+day_data_Test_sub <- day_data_Test %>% dplyr::select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,atemp,workingday))   #The test data is subsetted as well
 ```
 
 The first linear regression model contributed is:
