@@ -40,7 +40,7 @@ apply(reports, MARGIN = 1, FUN=function(x){
 
 Reports that are generated for each day:   
 
-* The analysis for [Monday is available here](Analysis.md).    
+* The analysis for [Monday is available here](Weekday_Analysis.md).    
 * The analysis for [Tuesday is available here](tuesday.md).    
 * The analysis for [Wednesday is available here](wednesday.md).    
 * The analysis for [Thursday is available here](thursday.md).    
