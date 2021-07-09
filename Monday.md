@@ -2,21 +2,25 @@ Monday Analysis
 ================
 7/4/2021
 
-  - [Packages required to load and analyse the
+-   [Packages required to load and analyse the
     data](#packages-required-to-load-and-analyse-the-data)
-  - [MON Report](#mon-report)
-      - [Introduction](#introduction)
-      - [Data preparation](#data-preparation)
-      - [Train/Test split](#traintest-split)
-      - [Data Summarizations and
+-   [MON Report](#mon-report)
+    -   [Introduction](#introduction)
+    -   [Data preparation](#data-preparation)
+    -   [Train/Test split](#traintest-split)
+    -   [Data Summarizations and
         discussions](#data-summarizations-and-discussions)
-          - [Overall Count](#overall-count)
-          - [Weather Condition](#weather-condition)
-          - [Seasons](#seasons)
-          - [Temperature and Feeling
+        -   [Overall Count (Jiashu, please add your summary
+            tables)](#overall-count-jiashu-please-add-your-summary-tables)
+        -   [Weather Condition](#weather-condition)
+        -   [Seasons](#seasons)
+        -   [Temperature and Feeling
             Temperature](#temperature-and-feeling-temperature)
-          - [Humidity](#humidity)
-          - [Wind Speed](#wind-speed)
+        -   [Humidity](#humidity)
+        -   [Wind Speed](#wind-speed)
+    -   [Modeling](#modeling)
+        -   [Linear Regression Model](#linear-regression-model)
+        -   [Ensemble Tree Model](#ensemble-tree-model)
 
 ``` r
 knitr::opts_chunk$set(fig.path='Figs/')
@@ -78,35 +82,6 @@ Reading in the data using a relative path
 day_data  <-  read_csv("day.csv")
 ```
 
-Converting the year, season, and weather situation variables:
-
-``` r
-#categorizing the season variable as factor
-day_data <- mutate(day_data, Season = 
-                  ifelse(season == 1, "Winter",
-                  ifelse(season == 2, "Spring",
-                  ifelse(season == 3, "Summer",
-                  ifelse(season == 4, "Fall", "")))))
-day_data$Season <- factor(day_data$Season, levels=c("Winter","Spring", "Summer","Fall"))
-
-#categorizing the year variable as factor
-day_data <- mutate(day_data, Year = 
-                  ifelse(yr == 0, "2011",
-                  ifelse(yr == 1, "2012", "")))
-day_data$Year <- factor(day_data$Year, levels=c("2011","2012"))
-
-#categorizing the weathersit variable as factor
-day_data <- mutate(day_data, weather_situation = 
-                  ifelse(weathersit == 1, "Clear Weather",
-                  ifelse(weathersit == 2, "Misty/Cloudy Weather",
-                  ifelse(weathersit == 3, "Light Snow/Rain/Thunderstorm Weather",
-                  ifelse(weathersit == 4, "Heavy Rain/Snow/Fog/Icy Weather", "")))))
-day_data$weather_situation <- factor(day_data$weather_situation, levels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather"))
-
-#reordering the day_data and renaming mth, cnt and hum
-day_data <- day_data %>% select(-c("instant","season","yr", "weathersit")) %>% rename(month = mnth,count = cnt,humidity = hum)
-```
-
 Converting the weekday variable to a factor containing the 7 days of the
 week:
 
@@ -114,6 +89,39 @@ week:
 day_as_fac_data <- day_data %>%
     mutate(week_day = wday(weekday +1,label=TRUE,locale="English_United States")) 
 day_as_char_data <- day_as_fac_data %>% mutate_if(is.factor, as.character)
+```
+
+Converting the year, season, and weather situation variables:
+
+``` r
+#categorizing the season variable as factor
+day_as_char_data <- mutate(day_as_char_data, Season = 
+                  ifelse(season == 1, "Winter",
+                  ifelse(season == 2, "Spring",
+                  ifelse(season == 3, "Summer",
+                  ifelse(season == 4, "Fall", "")))))
+day_as_char_data$Season <- factor(day_as_char_data$Season, levels=c("Winter","Spring", "Summer","Fall"))
+
+#categorizing the year variable as factor
+day_as_char_data <- mutate(day_as_char_data, Year = 
+                  ifelse(yr == 0, "2011",
+                  ifelse(yr == 1, "2012", "")))
+day_as_char_data$Year <- factor(day_as_char_data$Year, levels=c("2011","2012"))
+
+#categorizing the weathersit variable as factor
+day_as_char_data <- mutate(day_as_char_data, weather_situation = 
+                  ifelse(weathersit == 1, "Clear Weather",
+                  ifelse(weathersit == 2, "Misty/Cloudy Weather",
+                  ifelse(weathersit == 3, "Light Snow/Rain/Thunderstorm Weather",
+                  ifelse(weathersit == 4, "Heavy Rain/Snow/Fog/Icy Weather", "")))))
+day_as_char_data$weather_situation <- factor(day_as_char_data$weather_situation, levels=c("Clear Weather","Misty/Cloudy Weather", "Light Snow/Rain/Thunderstorm Weather","Heavy Rain/Snow/Fog/Icy Weather"))
+
+
+day_as_char_data$holiday <- as.factor(day_as_char_data$holiday)
+day_as_char_data$workingday <- as.factor(day_as_char_data$workingday)
+
+#reordering the day_data and renaming mth, cnt and hum
+day_as_char_data <- day_as_char_data %>% select(-c("instant","season")) %>% rename(month = mnth,count = cnt,humidity = hum)
 ```
 
 Setting up the dataset for later automation. The code will be automated
@@ -139,7 +147,7 @@ day_data_Test <- data_weekday[test, ]
 
 ## Data Summarizations and discussions
 
-### Overall Count
+### Overall Count (Jiashu, please add your summary tables)
 
 The averages for selected variables for each year is shown below
 
@@ -157,10 +165,10 @@ grouped_mean  <-  day_data_Train %>%
 kable(grouped_mean, caption="Averages of selected variables for each year")
 ```
 
-| Year |  n | avg\_registered\_user | avg\_casual\_user | avg\_windspeed | avg\_humidity |
-| :--- | -: | --------------------: | ----------------: | -------------: | ------------: |
-| 2011 | 35 |                  2703 |               519 |          12.52 |         63.69 |
-| 2012 | 38 |                  4187 |               702 |          13.52 |         63.73 |
+| Year |   n | avg\_registered\_user | avg\_casual\_user | avg\_windspeed | avg\_humidity |
+|:-----|----:|----------------------:|------------------:|---------------:|--------------:|
+| 2011 |  35 |                  2703 |               519 |          12.52 |         63.69 |
+| 2012 |  38 |                  4187 |               702 |          13.52 |         63.73 |
 
 Averages of selected variables for each year
 
@@ -181,28 +189,27 @@ grouped_sd  <-  day_data_Train %>%
 kable(grouped_sd, caption="Standard deviation of selected variables for each year")
 ```
 
-| Year |  n | avg\_registered\_user | avg\_casual\_user | avg\_windspeed | avg\_humidity |
-| :--- | -: | --------------------: | ----------------: | -------------: | ------------: |
-| 2011 | 35 |                  1005 |               352 |          5.912 |        13.925 |
-| 2012 | 38 |                  1586 |               531 |          5.620 |        14.234 |
+| Year |   n | avg\_registered\_user | avg\_casual\_user | avg\_windspeed | avg\_humidity |
+|:-----|----:|----------------------:|------------------:|---------------:|--------------:|
+| 2011 |  35 |                  1005 |               352 |          5.912 |        13.925 |
+| 2012 |  38 |                  1586 |               531 |          5.620 |        14.234 |
 
 Standard deviation of selected variables for each year
 
 ### Weather Condition
 
 The table for weather condition vs. year for this particular day is
-shown
-below:
+shown below:
 
 ``` r
 year_season_table <- table(day_data_Train$Year, day_data_Train$weather_situation )
 kable(year_season_table, caption="Table of Year vs. Weather situation")
 ```
 
-|      | Clear Weather | Light Snow/Rain/Thunderstorm Weather | Misty/Cloudy Weather |
-| ---- | ------------: | -----------------------------------: | -------------------: |
-| 2011 |            24 |                                    1 |                   10 |
-| 2012 |            21 |                                    1 |                   16 |
+|      | Clear Weather | Misty/Cloudy Weather | Light Snow/Rain/Thunderstorm Weather | Heavy Rain/Snow/Fog/Icy Weather |
+|:-----|--------------:|---------------------:|-------------------------------------:|--------------------------------:|
+| 2011 |            24 |                   10 |                                    1 |                               0 |
+| 2012 |            21 |                   16 |                                    1 |                               0 |
 
 Table of Year vs. Weather situation
 
@@ -253,19 +260,18 @@ day_data_Train$registered_format <- factor(day_data_Train$registered_format, lev
 ```
 
 The number of casual users vs season for 2011-2012 are shown in the
-table and bar chart
-below:
+table and bar chart below:
 
 ``` r
 casual_users_table <- table(day_data_Train$casual_format, day_data_Train$Season )
 kable(casual_users_table, caption="Casual users vs Season for 2011-2012")
 ```
 
-|                               | Fall | Spring | Summer | Winter |
-| ----------------------------- | ---: | -----: | -----: | -----: |
-| Low number of casual users    |   18 |     15 |      8 |     19 |
-| Medium number of casual users |    1 |      5 |      6 |      0 |
-| High number of casual users   |    0 |      1 |      0 |      0 |
+|                               | Winter | Spring | Summer | Fall |
+|:------------------------------|-------:|-------:|-------:|-----:|
+| Low number of casual users    |     19 |     15 |      8 |   18 |
+| Medium number of casual users |      0 |      5 |      6 |    1 |
+| High number of casual users   |      0 |      1 |      0 |    0 |
 
 Casual users vs Season for 2011-2012
 
@@ -280,19 +286,18 @@ ggplot(data=day_data_Train, aes(x=day_data_Train$Season))+
 ![](Figs/unnamed-chunk-12-1.png)<!-- -->
 
 The same information for number of registered users is shown in the
-table and bar chart
-below:
+table and bar chart below:
 
 ``` r
 registered_users_table <- table(day_data_Train$registered_format, day_data_Train$Season )
 kable(registered_users_table, caption="Registered users vs Season for 2011-2012")
 ```
 
-|                                   | Fall | Spring | Summer | Winter |
-| --------------------------------- | ---: | -----: | -----: | -----: |
-| Low number of registered users    |    1 |      1 |      0 |     11 |
-| Medium number of registered users |    9 |     13 |      5 |      7 |
-| High number of registered users   |    9 |      7 |      9 |      1 |
+|                                   | Winter | Spring | Summer | Fall |
+|:----------------------------------|-------:|-------:|-------:|-----:|
+| Low number of registered users    |     11 |      1 |      0 |    1 |
+| Medium number of registered users |      7 |     13 |      5 |    9 |
+| High number of registered users   |      1 |      7 |      9 |    9 |
 
 Registered users vs Season for 2011-2012
 
@@ -318,9 +323,10 @@ ggplot(data=day_data_Train, aes(x=Season, y= count))+
   labs(x="Season", y="Total number of rentals", fill="Season", title = "Boxplot of Total number of rentals by Season for this week day")
 ```
 
-![](Figs/unnamed-chunk-14-1.png)<!-- --> This plot will let us know if
-there is a seasonal effect on number of rentals for this particular week
-day.
+![](Figs/unnamed-chunk-14-1.png)<!-- -->
+
+This plot will let us know if there is a seasonal effect on number of
+rentals for this particular week day.
 
 ### Temperature and Feeling Temperature
 
@@ -337,14 +343,14 @@ ggplot(tem_plot) + geom_line(aes(x=dteday,y=value,color=temp)) + facet_wrap(~Yea
 
 ![](Figs/unnamed-chunk-15-1.png)<!-- -->
 
-Basically, When the ture temperature is high, the body temperature will
-be lower; when the actual temperature is very low, the opposite is true.
+Basically, When the temperature is high, the body temperature will be
+lower; when the actual temperature is very low, the opposite is true.
 
 There’s no difference between these 2 variables, so we decided to drop
 `feeling temperature` due to the consideration of collinearity. Besides,
-the variance of ture `temperature` is a little bit larger than `feeling
-temperature`, so we expect `temperature` to be more sensitive when
-fitting the model.
+the variance of `temperature` is a little bit larger than
+`feeling temperature`, so we expect `temperature` to be more sensitive
+when fitting the model.
 
 ### Humidity
 
@@ -363,8 +369,7 @@ ggplot(data = hum_plot, aes(x=humidity, y=count, group=regist)) + geom_point(aes
 
 We can inspect the relationship of users with humidity using this plot
 roughly. The points are nearly evenly distributed, which means humidity
-can seldom affect the users if we control all other
-variables.
+can seldom affect the users if we control all other variables.
 
 ### Wind Speed
 
@@ -392,3 +397,106 @@ ggplot(data = wind_plot, aes(x=windspeed, y=count, group=regist)) + geom_point(a
 
 We can inspect the relationship of users with windspeed using this plot
 roughly.
+
+## Modeling
+
+### Linear Regression Model
+
+Linear regression modeling is one of the supervised learning methods
+where the output is known, and the goal is to establish a function that
+best approximates the relationship between desired outputs and the
+provided sample data. Specifically, linear regression accomplishes this
+by learning a model that best fits the linear relationship between the
+predictor and response variables.The model is fit by minimizing the sum
+of squared residuals (difference between the observed and predicted
+responses). Linear regression models fall into two categories: Simple
+Linear Regression and Multiple Linear Regression.
+
+Simple Linear Regression Model is one where there is only one
+independent variable (or predictor) and the goal is to learn the linear
+relationship between it and the response variable. Multiple Linear
+Regression (MLR) has more than one predictor, and the although
+relationship between predictors and response remains linear in terms of
+the model parameters, the MLR model could contain interaction, quadratic
+and polynomial terms.
+
+Underlying assumptions for the linear regression model are  
+\* Linearity: The model is linear in model parameters (betas) (Can be
+checked using histogram or Q-Q plots)  
+\* Normality: The predictor and response variables are multivariate
+normal  
+\* Multicollinearity: There is little to no multicollinearity among the
+predictor variables. (can be checked using Variance Inflation Factor)  
+\* Homoscedasticity: Residuals are randomly distributed across the
+regression line (Can be checked using the Residual vs. Fitted value
+scatter plot. The plot must have to discernable pattern)  
+\* Autocorrelation: Residuals must be independent of each other (Can be
+checked using Durbin-Watson’s test).
+
+#### First linear regression Model
+
+##### Subsetting the predictors that should best predict the total count of users
+
+To select the candidate models, I first subset the dataset to include
+only variables of interest for MLR.
+
+``` r
+day_data_Train_sub <- day_data_Train %>% select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation,casual_format,registered_format)) 
+day_data_Test_sub <- day_data_Test %>% select(-c(dteday,weekday,registered,casual,week_day,Season,Year,weather_situation))   #The test data is subsetted as well
+```
+
+The linear model selected for later models comparison is:
+
+``` r
+Lin_reg_train_1 <- lm(count ~ ., data = day_data_Train_sub)
+```
+
+``` r
+#Predict the response variable using the test data to evaluate model performance
+Lin_reg_1_predict <- predict(Lin_reg_train_1, newdata = day_data_Test_sub)
+
+#Get the missclassification rate 
+Lin_reg_1_predict_tbl <- table(Lin_reg_1_predict, day_data_Test_sub$count)
+Lin_reg_1_misclass <- 1-(sum(diag(Lin_reg_1_predict_tbl))/sum(Lin_reg_1_predict_tbl))
+```
+
+#### Second linear regression Model (Jiashu, please add your linear model here)
+
+### Ensemble Tree Model
+
+#### First Ensemble Tree Model: Random Forest Model
+
+I’ll be using a Random Forest Model
+
+``` r
+trctrl <- trainControl(method = "repeatedcv", number=10, repeats=3)
+rf_grid <- expand.grid(mtry = 1:11)
+rf_train <- train(count ~., 
+                 data= day_data_Train_sub, 
+                 method='rf', 
+                 trControl=trctrl,
+                 tuneGrid = rf_grid,
+                 preProcess=c("center", "scale"))
+
+plot(rf_train)
+```
+
+![](Figs/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+#The mtry value that gives the highest accuracy is:
+rf_train$bestTune
+```
+
+    ##   mtry
+    ## 5    5
+
+``` r
+#Predict the response variable using the test data to evaluate model performance
+rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
+
+
+#Get the missclassification rate 
+rf_predict_tbl <- table(rf_predict, day_data_Test_sub$count)
+rf_misclass <- 1-(sum(diag(rf_predict_tbl))/sum(rf_predict_tbl))
+```
