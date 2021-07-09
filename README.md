@@ -33,7 +33,7 @@ reports
 ```{r, eval=F}
 library(rmarkdown)
 apply(reports, MARGIN = 1, FUN=function(x){
-  render(input = "Analysis.Rmd", output_file = x[[2]], params=x[[3]])
+  render(input = "Weekday_Analysis.Rmd", output_file = x[[2]], params=x[[3]])
 })
 ```
 
