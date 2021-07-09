@@ -13,7 +13,7 @@ The packages required to run the analysis are `readr`,`ggplot2`, `dplyr`, `knitr
 
 ## Code needed to automate the Markdown reports
 
-```{r}
+```{r,eval = T}
 week_days <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 out_file <- paste0(week_days, ".md")
 params <- lapply(week_days, FUN=function(x){
