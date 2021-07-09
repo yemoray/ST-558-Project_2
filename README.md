@@ -1,11 +1,7 @@
 # ST-558-Project_2
-
----
-title: "ST 558 Project 2"
-authors: "Adeyemi Adepetun/Jiashu Zhao"
-date: "7/4/2021"
-output: rmarkdown::github_document
----
+================
+authors: Adeyemi Adepetun/Jiashu Zhao
+7/4/2021
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
