@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.path='Figs/')
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass","MASS",'gbm')
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass","MASS",'gbm','boot')
 lapply(packages, library, character.only = TRUE)
 ```
 
@@ -385,25 +385,35 @@ Lin_reg_1_predict <- predict(Lin_reg_1_train, newdata = day_data_Test_sub)
 
 #### Second linear regression Model  (Jiashu, please add your linear model here)
 
-Then we decided to use the best subset method to select the variables.
+From the first linear model fitted on the training set on Monday, we found that the most statistically significant predictors are `yr` (year) and `temp` (temperature). So in the second linear regression model, I decided to only kept this 2 variables, while considering their interaction term plus the polynomial terms of `temp`.
+
+I decided to use the cross validation to figure out which polynomial terms set from 1 to 10 perform the best.
 
 ```{r}
-log_full <- glm(count ~ ., data = day_data_Train_sub)
-log_step <- log_full %>% stepAIC(trace = F)
+N <- 7
+cv.error <- rep(0,N)
 
-coef(log_step)
+## Fit the model without poly term
+glm.fit=glm(count ~ yr*temp, data=day_data_Train)
+cv.error[1]=cv.glm(data=day_data_Train,glm.fit)$delta[1]
+
+## Fit the model that has the poly term
+for(i in 2:N){
+glm.fit=glm(count ~ yr*temp + poly(temp,i), data=day_data_Train)
+cv.error[i]=cv.glm(data=day_data_Train,glm.fit)$delta[1]
+}
+
+## Found out the model with smallest cv error
+cv.min <- which.min(cv.error)
+cv.min.value <- cv.error[which.min(cv.error)]
+
+## Save the best model
+Lin_reg_2_train <- glm(count ~ yr*temp + poly(temp,cv.min), data=day_data_Train)
+
+ggplot(data = NULL, aes(x=1:N,y=cv.error)) + geom_line() + theme_bw() + labs(x='poly terms', y = 'cv.error', title = 'CV errors vs poly terms') + geom_point(aes(x=cv.min, y=cv.min.value), color = 'red', size = 3)
 ```
 
-Above shows the coefficients of the logistic regression selected by best subset method with `r length(coef(log_step))-1` variables.
-
-```{r}
-#Predict the response variable using the test data to evaluate model performance
-Lin_reg_2_predict <- predict(log_step, newdata = day_data_Test_sub)
-
-#Get the missclassification rate 
-Lin_reg_2_predict_tbl <- table(Lin_reg_2_predict, day_data_Test_sub$count)
-Lin_reg_2_misclass <- 1-(sum(diag(Lin_reg_2_predict_tbl))/sum(Lin_reg_2_predict_tbl))
-```
+Above shows the trend between cross-validation errors with poly terms. From the plot we know that the best selected model is **count ~ yr + temp + temp:yr + poly(temp,`r cv.min`)**.
 
 ### Ensemble Tree Model
 #### First Ensemble Tree Model: Random Forest Model
@@ -430,32 +440,119 @@ rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
 
 #### Second Ensemble Tree Model: Boosted Tree Model
 
-For a small data set, we want to try boosted tree regression on order to aviod the problem of overfitting. We want to use the method **Gradient Boosting Machines**, which has lots of flexcibility and can be provided several hyperparameter tuning options that make the function fit very flexible. 
+For a small data set, we want to try boosted tree regression in order to aviod the problem of overfitting. We want to use the method **Gradient Boosting Machines**, which has lots of flexcibility and can be provided several hyperparameter tuning options that make the function fit very flexible.
 
-```{r,results='hide'}
-boosted_train <- train(count ~., 
-                 data= day_data_Train_sub, 
-                 method='gbm', 
-                 trControl=trctrl,
-                 preProcess=c("center", "scale"))
-boosted_predict <- predict(boosted_train, newdata = day_data_Test_sub)
+The methods/process in this part are come from an online website: [click here](http://uc-r.github.io/gbm_regression).
+
+```{r}
+# create hyperparameter grid
+hyper_grid <- expand.grid(
+  shrinkage = c(.01, .1, .3),
+  interaction.depth = c(1, 3, 5),
+  n.minobsinnode = c(5, 10, 15),
+  bag.fraction = c(.65, .8, 1), 
+  optimal_trees = 0,               # a place to dump results
+  min_RMSE = 0                     # a place to dump results
+)
 ```
 
+First we created a data frame of each hyperparameter, and we would like to loop through each hyperparameter combination and apply 5,000 trees.
+
+Since our training set is not large enough, and the number of observations are not constant among Monday to Sunday (I didn't check that and it's just my assumption), I didn't perform a 5-fold or 10-fold CV, but instead I train on $95\%$ of the training observations and evaluate performance on the remaining $5\%$. That's means for a training set which have 100 oberservations, it will do the same as a 5-fold CV; for a training set with 80 observations, it will do the same as a $80\times 0.05=4$ fold CV.
+
+Noticed that when using `train.fraction` it will take the first $XX\%$ of the data so I need to randomize the training set first in case there's a logic behind the ordering of the data (i.e. ordered by date).
+
+```{r,results='hide'}
+set.seed(23)
+# randomize data
+random_index <- sample(1:nrow(day_data_Train_sub), nrow(day_data_Train_sub))
+random_train <- day_data_Train_sub[random_index, ]
+
+# grid search 
+for(i in 1:nrow(hyper_grid)) {
+  
+  # reproducibility
+  set.seed(123)
+  
+  # train model
+  gbm.tune <- gbm(
+    formula = count ~ .,
+    distribution = "gaussian",
+    data = random_train,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[i],
+    shrinkage = hyper_grid$shrinkage[i],
+    n.minobsinnode = hyper_grid$n.minobsinnode[i],
+    bag.fraction = hyper_grid$bag.fraction[i],
+    train.fraction = .95,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+  )
+  
+  # add min training error and trees to grid
+  hyper_grid$optimal_trees[i] <- which.min(gbm.tune$valid.error)
+  hyper_grid$min_RMSE[i] <- sqrt(min(gbm.tune$valid.error))
+}
+
+hyper_grid <- hyper_grid %>% 
+  dplyr::arrange(min_RMSE) 
+hyper_grid %>%
+  head(10)
+```
+
+Above shows the details of the expand grid ranged by RMSE. Since we selected the best `shrinkage`, `interaction.depth` and so on, 
+
+I decided to dive deeper about the number of trees (max=10000) by these winned hyperparameters and selected the model by 5-fold CV.
+
+```{r}
+set.seed(123)
+# train GBM model
+gbm.fit.final <- gbm(
+    formula = count ~ .,
+    distribution = "gaussian",
+    data = random_train,
+    n.trees = 5000,
+    interaction.depth = hyper_grid$interaction.depth[1],
+    shrinkage = hyper_grid$shrinkage[1],
+    n.minobsinnode = hyper_grid$n.minobsinnode[1],
+    bag.fraction = hyper_grid$bag.fraction[1],
+    cv.folds = 5,
+    n.cores = NULL, # will use all cores by default
+    verbose = FALSE
+)
+
+## Predict
+pred <- predict(gbm.fit.final, n.trees = gbm.fit.final$n.trees, day_data_Test_sub)
+boosted_RMSE <- caret::RMSE(pred, day_data_Test_sub$count)
+
+gbm.perf(gbm.fit.final, method = "cv")
+```
+
+Above shows the trend of cross-validation error with number of trees. At trees equal to `r which.min(gbm.fit.final$cv.error)` we get the minimum error rate `r sqrt(min(gbm.fit.final$cv.error))`, which may be a better representation of the error we might expect on the test data set.
 
 ### Model Comparison
 
-The four models (2 linear regression models, one random forest model and one boosted tree model) are compared below.The RMSE is used as the basis for comparison 
+The four models (2 linear regression models, one random forest model and one boosted tree model) are compared below.The RMSE is used as the basis for comparison.
+
 ```{r}
 library(ModelMetrics)
 
-print("lm rmse:")
-print(rmse(predict(Lin_reg_1_train, day_data_Test_sub), day_data_Test_sub$count))
+Result <- data.frame(method = c('Full Linear', 'Subset Linear', 'Random Forest', 'Boosted Tree'), RMSE = rep(NA,4))
 
-print("rf rmse:")
-print(rmse(predict(rf_train$finalModel, day_data_Test_sub), day_data_Test_sub$count))
+Result$method <- as.character(Result$method)
 
-print("Boosted rmse:")
-print(rmse(predict(boosted_train$finalModel, day_data_Test_sub), day_data_Test_sub$count))
+Result$RMSE[1] <- rmse(predict(Lin_reg_1_train, day_data_Test_sub), day_data_Test_sub$count)
+
+Result$RMSE[2] <- rmse(predict(Lin_reg_2_train, day_data_Test_sub), day_data_Test_sub$count)
+
+Result$RMSE[3] <- rmse(predict(rf_train$finalModel, day_data_Test_sub), day_data_Test_sub$count)
+
+Result$RMSE[4] <- boosted_RMSE
+
+Result %>%
+  kable(caption = 'Final Result for 4 models', digits = 2)
 ```
 
-The model with the lowest `rmse` value is the winner.
+The model with the lowest `RMSE` value is the winner. Just a quick summary that, the **Full Linear** refers to the linear model contains all the 8 variables (`r names(day_data_Train_sub)[-9]`) after we selected first. The **Subset Linear** is a polynomial linear regression contains the interaction term of `yr` and `temp`. The **Random Forest** and the **Boosted Tree** are 2 ensemble models.
+
+Here, the winner belongs to the `r Result$method[which.min(Result$RMSE)]` model.
