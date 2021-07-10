@@ -383,7 +383,7 @@ Lin_reg_1_predict <- predict(Lin_reg_1_train, newdata = day_data_Test_sub)
 #The rmse will be shown in the model comparison table below
 ```
 
-#### Second linear regression Model  (Jiashu, please add your linear model here)
+#### Second linear regression Model
 
 From the first linear model fitted on the training set on Monday, we found that the most statistically significant predictors are `yr` (year) and `temp` (temperature). So in the second linear regression model, I decided to only kept this 2 variables, while considering their interaction term plus the polynomial terms of `temp`.
 
@@ -418,7 +418,7 @@ Above shows the trend between cross-validation errors with poly terms. From the 
 ### Ensemble Tree Model
 #### First Ensemble Tree Model: Random Forest Model
 
-I'll be using a Random Forest as my ensemble method. It works by creating a number of decision trees from bootstrap samples using the training data set, with no interaction between the trees, and aggregates the result from these trees before outputting the most optimal result. _mtry_ is used as the tuning parameter, this is the number of variables randomly sampled at each split.
+We'll be using a Random Forest as my ensemble method. It works by creating a number of decision trees from bootstrap samples using the training data set, with no interaction between the trees, and aggregates the result from these trees before outputting the most optimal result. _mtry_ is used as the tuning parameter, this is the number of variables randomly sampled at each split.
 The number of variables to use in the model is selected by 10-fold repeated cross validation from the `caret` package using accuracy as the metric. 
 
 ```{r}
@@ -440,7 +440,7 @@ rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
 
 #### Second Ensemble Tree Model: Boosted Tree Model
 
-For a small data set, we want to try boosted tree regression in order to aviod the problem of overfitting. We want to use the method **Gradient Boosting Machines**, which has lots of flexcibility and can be provided several hyperparameter tuning options that make the function fit very flexible.
+For a small data set, we want to try boosted tree regression in order to avoid the problem of overfitting. We want to use the method **Gradient Boosting Machines**, which has lots of flexibility and can be provided several hyperparameter tuning options that make the function fit very flexible.
 
 The methods/process in this part are come from an online website: [click here](http://uc-r.github.io/gbm_regression).
 
