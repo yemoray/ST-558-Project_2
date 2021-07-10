@@ -22,6 +22,8 @@ packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "
 lapply(packages, library, character.only = TRUE)
 ```
 
+`r packages`
+
 # `r toupper(params$day)` Report
 
 ## Introduction
@@ -327,6 +329,24 @@ ggplot(data = wind_plot, aes(x=windspeed, y=count, group=regist)) + geom_point(a
 ```
 
 We can inspect the relationship of users with windspeed using this plot roughly.
+
+Below shows the numeric information for wind speed.
+
+```{r}
+windspeed_summmary <- day_data_Train %>% 
+  dplyr::select(season, windspeed) %>%
+  group_by(season) %>%
+  summarise(
+    Min = min(windspeed),
+    '1st Qu.' =  quantile(windspeed, 0.25),
+    Median = median(windspeed),
+    '3rd Qu.' = quantile(windspeed, 0.75),
+    Max = max(windspeed),
+  )
+
+windspeed_summmary %>%
+  knitr::kable(digits = 2, caption = 'Numeric Summary for Windspeed')
+```
 
 
 ## Modeling
