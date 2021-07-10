@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.path='Figs/')
 The following packages are needed for reading and analyzing the data:
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass","MASS")
+packages <- c("readr","ggplot2","dplyr","knitr", "caret", "tidyr","lubridate", "forcats","leaps", "regclass","MASS",'gbm')
 lapply(packages, library, character.only = TRUE)
 ```
 
@@ -428,8 +428,18 @@ rf_predict <- predict(rf_train, newdata = day_data_Test_sub)
 #The rmse will be shown in the model comparison table below
 ```
 
-#### Second Ensemble Tree Model: Boosted Tree Model (Jiashu, please put your boosted tree model here)
+#### Second Ensemble Tree Model: Boosted Tree Model
 
+For a small data set, we want to try boosted tree regression on order to aviod the problem of overfitting. We want to use the method **Gradient Boosting Machines**, which has lots of flexcibility and can be provided several hyperparameter tuning options that make the function fit very flexible. 
+
+```{r,results='hide'}
+boosted_train <- train(count ~., 
+                 data= day_data_Train_sub, 
+                 method='gbm', 
+                 trControl=trctrl,
+                 preProcess=c("center", "scale"))
+boosted_predict <- predict(boosted_train, newdata = day_data_Test_sub)
+```
 
 
 ### Model Comparison
@@ -443,5 +453,9 @@ print(rmse(predict(Lin_reg_1_train, day_data_Test_sub), day_data_Test_sub$count)
 
 print("rf rmse:")
 print(rmse(predict(rf_train$finalModel, day_data_Test_sub), day_data_Test_sub$count))
+
+print("Boosted rmse:")
+print(rmse(predict(boosted_train$finalModel, day_data_Test_sub), day_data_Test_sub$count))
 ```
+
 The model with the lowest `rmse` value is the winner.
